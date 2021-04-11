@@ -1,71 +1,48 @@
-# Arduino-RC-Cars-Crawler-Lighting-Module
 Arduino control for indicators, headlights, brake lights etc for radio controlled vehicles.
 
-Adruino Pro Mini ATMega328p 5v 16MHz
-Currently for USA tail lights 
+THIS IS AN UNFINISHED WORK IN PROGRESS PROJECT
 
-  Front headlights*:  default pin 6 Permenant dip when in throttle is off for more than 4 seconds
-                        Full beam when throttle is forwards
-  Rear right tail*:   default pin 5 Permenant full when throttle is off
-                        Flash full when turning right and throttle is off
-                        Stop flashing 2 seconds after steering is netural
-  Rear left tail*:    default pin 3 Same as above
-  Front left ind:     default pin 10 Flash full when turning right and throttle is off
-                        Stop flashing 2 seconds after steering is netural
-  Front right ind:    default pin4 Same as above
-  Reverse:            default pin 7 Whenever throttle is reversed
-  Spotlight array*:   default pin 9 Directly following channel 4 input, off/dim/bright
-  Ancillairy LED:     default pin 8 Directly following channel 3 input, off/on
-  
+Adruino Pro Mini ATMega328p 5v 16MHz
+Facility  for USA and REST OF WORLD  tail lights
+Number in brackets (2*) refer to default pin number.  The * denotes a PWM capable output pin is required.
+FOR USA tail lights Bridge USA pin (12) to ground
+For Rest Of World tail lights leave USA (12) open (pulled up)  and link rear indicators to respective front indicstors
+
+Headlights (6*): 	Normally dipped. Full when moving forward or stationary for  less than 4 seconds after moving forward
+Reversing Lights (7):	Normally off. Full when reversing or stationary for  less than 4 seconds after reversing
+Left Indicators (10) :  Normally off. Always off whenever turning right .
+Flashing when: 	(turning left and stationary) or  (already indicating left and within 2 seconds of straight steering ) or (continuing turning left from stationary and moving).
+Right Indicators  (4) :  Normally off. Always off whenever turning left .
+Flashing when: 	(turning right and stationary) or  (already indicating right and within 2 seconds of straight steering ) or (continuing turning right from stationary and moving). 
+For USA connect 2 LEDs to each front indicator or change series resistor value.
+Rear Left Tail Light (3*) : Normally (dim when moving) or  (Full when stationary)
+USA ONLY  Flash off /  full when (turning left and stationary) or  (already indicating left and within 2 seconds of straight steering ) or (continuing turning left from stationary and moving). 
+Rear Right Tail Light (5*) : Normally (dim when moving) or  (Full when stationary)
+USA ONLY  Flash off /  full when (turning right and stationary) or  (already indicating right and within 2 seconds of straight steering ) or (continuing turning right from stationary and moving). 
+4 Array LEDs  - eg spotlight bar (9*): following RX channel 4 (off/mid/high)
+1 LED (3): RX channel 3 (on/off)
+
+
+Inputs from RX are rx1 to rx4  to pins 2, 10,11,12
+
   
   RX data:
-  Each RX channel outputs a square wave pulse of between 1000 to 2000 microseonds
-  the 'servo' centre point is a pulse width of approx 1500 microseconds
-  each RX channel pulse repeats approx every 180 milliseconds 
+  Each RX channel outputs a square wave pulse of between 1000 to 2000 microseconds
+  the 'servo' centre point is a pulse width of approx. 1500 microseconds
+  each RX channel pulse repeats approx. every 10 milliseconds 
   The falling edge of each channel pulse coincides with the rising edge of the next channel pulse
    
   Pulse detection
-  A pin 2 interrupt (RX channel 1) sets a flag  and a time-stamp  
-  Stream comprises each channel in sequence follows pulse 
-  1st pulse of between 850 to 1800 microseconds for channel 1 (steering)
-  falling edge of channel 1 pulse triggers rising edge of channel 2 pulse
-  
-  General Code Description
-  Digital Input pin 2 - set as an interrupt to flag the rise of the first pulse of 6 sequential servo pulses 
- 
- * headlights, tail lights and array lights require PWM capable pin.
- Pin allocations are set as global constants 
+The lights do not require a fast response time. The channel pulses are only interrogated once every 180ms leaving ample processing time for other operations. 
+
+A pin 2 rising edge  interrupt (RX channel 1) sets a flag   
+Loop checks for next flag raise  after the 180ms TX has timed out .
+Duration [txchannel] is set for  each channel 1-4
+Function (fun) for each channel is set to ‘S’tationary , ‘L’ow or ‘H’igh:
+L = <1400us, S=>1400 &<1600us   H=>1600us 
 
 Basic Operation
 Power is taken directly from the "6V" RX power.  Measured at 5.77v and slightly higher than Arduino 5.5 max. Monitoring this. 
 signals taken receiver from servo control outputs for channel 1 (steering) 2, ESC , 3 three position switch, 4, toggle on/off.  
 original conception had a lighting spot bar with a servo controlled single rotating spotlight
-Headlights: always on dip. 
- 
- Throttle is off >4                    Headlights dip                    1.
-  Throttle is off                       Tail lights full
- ***Throttle is retarding               Brake lights full**
-  Throttle is reverse                   Reverse lights on
-                                        Tail lights dip
-  Throttle is forward                   Headlights full
-                                        Tail lights dip
-  Throttle is off & turning right       Right tail light flash full       2.
-                                        Right indicator flash full
-  Throttle is off & turning left        Left tail light flash full        2.
-                                        Left insicator flash full
-  Steering is neutral after 2 seconds   Cancel left indicator
-                                        Right indicator off
-                                        Left indicator off
-                                        Right tail light flash off
-                                        Left tail light flash off
-  3-position switch is off              Spots off
-  3-position switch is mid              Spots dip
-  3-position switch is high             Spots full
-  Toggle is off                         Rotating spot off
-                                        Servo is detached
-  Toggle is on                          Rotating spot is on
-                                        Servo is attached
- 
 
-
-*/

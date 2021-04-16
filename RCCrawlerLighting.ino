@@ -2,22 +2,46 @@
 //
 //Added USA/Non USA tail light option:
 // FOR USA TAIL LIGHTS  link USAPIN (default 12) to GROUND
+//FOR REST OF WORLD:
+//    ALLOW PIN 12 TO FLOAT HIGH
+//    REPLACE 200R resistors for 100R on front indicators (darlington pins 13 & 14)
+//    Parallel connect rear intdicators with front intdicators.
+//
 //No link needed for seperate rear indicator option
 //rear indicators wire to front indicators
-/*Reverse:            4 Whenever throttle is reversed
-  Front headlights*:  6 Permenant dip when in throttle is off for more than 4 seconds
-  Front left ind:     7 Flash full when turning right and throttle is off
+/*
+  Rear left tail*:    1 Red LED from Darlingtonpin 10 via 200R from D3 Permenant full when throttle is off
+                        (USA OPTION Flash full when turning right and throttle is off
+                        Stop flashing 2 seconds after steering is netural)
+  Reverse:            2 white LED from  Darlington pin 11 via 60R triggered from D4 Whenever throttle is reversed
+  Rear right tail*:   1 Red LED from Darlington pin 12  and 200R from D5 same as above
+  Front headlights*:  2 white LED from  Darlington pin 13 via 60R triggered from D6 Permenant dip when in throttle is off for more than 4 seconds 
+                        Full beam when throttle is forwards
+  Front left ind:     1 Orange LED from Darlington pin 14 via 200R triggered from D7 Flash full when turning right and throttle is off
                         Stop flashing 2 seconds after steering is netural
-  Front right ind:    8 Same as above                        Full beam when throttle is forwards
-  Rear right tail*:   5 Permenant full when throttle is off
-                        Flash full when turning right and throttle is off
-                        Stop flashing 2 seconds after steering is netural
-  Rear left tail*:    3 Same as above
-  light bar           9
+  Front right ind:    1 Orange LED from Darlington pin 15 via 200R from D8 Same as above                        
+ 
 
+  light bar           4 White LED from Darlington pin 16 and 30R from D9
+                        with RX channel 3
+Wiring:
+Vcc to 6v from ESU
+GND to 0v from ECU
+
+Arduino Pins D2, D10 & D11 to receiver output channels 1,2 & 3 (throttle, steering & aux toggle switch)
+
+ULN2003/ULN2004 pins 
+  1, 2, 3, 4, 5, 6 & 7 to Adruino Pins D9, D8, D7, D6, D5, D4 & D3
+  8 - GND, 
+  9 not connected 10-16 as above
+  connect Arduino pin D12 to ground for USA rear tail lights.
+  Arduino pins D0,D1, D13 and A0 - A7 not connected.
+  
+  RX channel 1 and 2 to be parallel connected to steering servo and ESC
 
 
 */
+
 
 static int debug = 1;
 
@@ -25,7 +49,7 @@ static int debug = 1;
 
 static const int NO_OF_CHANNELS = 3;
 static int rxChannelPin[4] = {0, 2, 10, 11};// 0 not used RX1 Steering, RX2 Throttle, RX3 Toggle
-static const int CALIBRATEPIN = 14;
+
 static const int USAPIN = 12; //connect to ground  for USA tail lights
 static const int REARLEFT = 3;
 static const int REARRIGHT = 5;
@@ -50,31 +74,10 @@ static char statusCh[5];
 static boolean stCancel[4];
 static boolean USA = 0;
 
-
-
-
-
-
-unsigned int powerForwards = 1660;
-unsigned int powerReverse = 1400;
-unsigned int turnLeft = 1660;
-unsigned int turnRight = 1420;
-unsigned int channel4Off = 1300;
-unsigned int channel4High = 1550;
-unsigned int channel3On = 1550;
-
-
-boolean throttleCounterRunning = false;
-long throttleCounter = 9999;
-long RsteeringCounter = 9999;
-boolean RsteeringCounterRunning = false;
-long LsteeringCounter = 9999;
-boolean LsteeringCounterRunning = false;
 int dip = 55;
 unsigned long rxChannel = 1;
-volatile int ST;
 volatile int STF;
-boolean tflash;
+
 int headlight;
 int frontLeft;
 int frontRight;
@@ -82,12 +85,6 @@ int rearRight;
 int rearLeft;
 int reverse;
 int lightbar;
-int rotatingSpot;
-
-
-
-
-
 
 //============================== SETUP ==========================================
 void setup() {
@@ -101,7 +98,7 @@ void setup() {
     pinMode(rxChannelPin[i], INPUT_PULLUP);
   }
   pinMode (USAPIN, INPUT_PULLUP);
-  pinMode (CALIBRATEPIN, INPUT_PULLUP);
+
   pinMode(REARLEFT, OUTPUT);
   pinMode(REARRIGHT, OUTPUT);
   pinMode(REVERSE, OUTPUT);
@@ -146,12 +143,7 @@ void loop() {
   output();
 }
 
-//================================ calibrate =================================
-void calibrate() {
-  if (digitalRead(CALIBRATEPIN) == 0) {
 
-  }
-}
 
 
 //================================ Interrogate =================================
@@ -212,7 +204,7 @@ void output() {
   //output 0 = off, 1 for dip 2 flash 3= full
 
   // headlights
-  // default to dip tiimes
+  // default to dip 
   //hi if moving forwards
   //hi if on and stationary is timing out and not reverse
 
